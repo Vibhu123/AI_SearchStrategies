@@ -1,0 +1,85 @@
+	
+		PrintWriter writer = new PrintWriter("output.txt", "UTF-8");
+		Comparator<Node> comp=new AStarComparator();
+		PriorityQueue<Node> pq=new PriorityQueue<Node>(comp);
+
+		pq.add(h1.get(startState));
+		Set<String> explored=new HashSet<String>();//explored set
+		while(!pq.isEmpty())
+		{
+			Node current=pq.poll();
+			String state=current.getState();
+			path.put(current.state, current);
+			
+			if(state.contentEquals(goalState))
+			{
+				break;
+			}
+			Node node=h1.get(state);
+			explored.add(state);
+			if(node==null)
+				continue;
+			ArrayList<Node> nodes=h1.get(current.state).getChildren();//get all adjacent nodes
+			
+			if(nodes.size()>0)
+			{	
+				for(Node neighbour:nodes)
+				{	//check if already there in pq, if there then update the cost else add it
+						
+					boolean inPriorityQueue=false;
+						int tentative_cost=current.cost+neighbour.cost;
+						if(!explored.contains(neighbour.state))
+						{
+							Iterator<Node> pqNode=pq.iterator();
+							Node updateNode=null;
+							while(pqNode.hasNext())
+							{
+								Node pqNextNode=pqNode.next();
+								//If already in queue
+								if(neighbour.getState().contentEquals(pqNextNode.getState()))
+								{
+									inPriorityQueue=true;
+									if((tentative_cost)<pqNextNode.cost)
+									{
+										pqNextNode.cost=tentative_cost;
+										pqNextNode.parentStr=current;
+										updateNode=pqNextNode;
+										pq.remove(pqNextNode);
+										break;
+									}
+								}
+							}
+							if(updateNode!=null)
+							{
+								pq.add(updateNode);
+							}
+							//If neighbour not in queue add it
+							if(!inPriorityQueue)
+							{
+								neighbour.cost=current.cost+neighbour.cost;
+								neighbour.parentStr=current;
+								pq.add(neighbour);
+							}
+						}
+				}
+			}
+		}
+		Stack<String> fullPath=new Stack<String>();
+		
+		String sampleString=goalState;
+		while(!sampleString.contentEquals(startState))
+		{
+			fullPath.push(sampleString+" "+path.get(goalState).cost);
+			sampleString=path.get(goalState).parentStr.state;
+			goalState=sampleString;
+		}
+		
+		fullPath.push(startState+" "+0);
+		while(!fullPath.isEmpty())
+		{
+			String elem=fullPath.pop();
+			writer.write(elem+"\n");
+			System.out.println(elem);
+		}
+		writer.close();
+	}
